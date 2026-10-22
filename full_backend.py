@@ -843,6 +843,50 @@ def history(
     )
 
 
+# Insert this section BEFORE app.include_router(api) in full_backend.py.
+# Uses the existing Input, api, staff, database, execute, Field, date, UUID,
+# Literal, Query and HTTPException definitions from that file.
+
+class StockReceiptInput(Input):
+    id: UUID
+    reference: str = Field(min_length=1, max_length=200)
+    sku: str = Field(min_length=1, max_length=200)
+    quantity: int = Field(strict=True, gt=0, le=2147483647)
+    batch_number: str = Field(min_length=1, max_length=200)
+    expiry_date: date
+    delivery_date: date
+    supplier: str = Field(min_length=1, max_length=300)
+
+
+@api.get('/receiving/receipts')
+def receiving_receipts(limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0)):
+    rows = execute(
+        database().table('bs_stock_receipts').select('*')
+        .order('updated_at', desc=True).order('id').range(offset, offset + limit - 1)
+    )
+    return {'receipts': rows}
+
+
+@api.post('/receiving/receipts')
+def save_receiving_receipt(body: StockReceiptInput, user=Depends(staff)):
+    if body.expiry_date < body.delivery_date:
+        raise HTTPException(422, 'Expiry cannot be before the delivery date.')
+    if body.delivery_date > today():
+        raise HTTPException(422, 'Stock cannot be received before its delivery date.')
+    return execute(database().rpc('bs_receive_stock', {
+        'receipt_id': str(body.id), 'action': 'save',
+        'payload': body.model_dump(mode='json', exclude={'id'}), 'actor': user,
+    }))
+
+
+@api.post('/receiving/receipts/{receipt_id}/{action}')
+def finalize_receiving_receipt(receipt_id: UUID, action: Literal['approve', 'reject'], user=Depends(staff)):
+    # Finalize the stored draft; never trust unsaved browser fields for approval.
+    return execute(database().rpc('bs_receive_stock', {
+        'receipt_id': str(receipt_id), 'action': action, 'payload': {}, 'actor': user,
+    }))
+
+
 app.include_router(api)
 
 
