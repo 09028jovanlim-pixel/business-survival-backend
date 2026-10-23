@@ -940,6 +940,46 @@ def finalize_receiving_receipt(receipt_id: UUID, action: Literal['approve', 'rej
     }))
 
 
+# ---------------------------------------------------------
+# Regular product selling prices
+# ---------------------------------------------------------
+
+@api.get("/product-prices")
+def get_product_prices():
+    rows = execute(
+        database()
+        .table("bs_product_prices")
+        .select("sku, regular_selling_price, currency, version")
+        .order("sku")
+    )
+    return {"prices": rows}
+
+# Validate product selling price requests
+class ProductPriceInput(Input):
+    sku: str = Field(min_length=1, max_length=200)
+    regular_selling_price: Decimal = Field(
+        gt=0,
+        max_digits=12,
+        decimal_places=2
+    )
+    expected_version: int | None = Field(default=None, ge=1)
+
+@api.post("/product-prices")
+def save_product_price(
+    body: ProductPriceInput,
+    user=Depends(staff)
+):
+    return execute(
+        database().rpc(
+            "bs_set_product_price",
+            {
+                "payload": body.model_dump(mode="json"),
+                "actor": user,
+            },
+        )
+    )
+
+
 app.include_router(api)
 
 
