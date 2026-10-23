@@ -1,6 +1,8 @@
 import calendar
 import logging
 import os
+import time
+from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import lru_cache
@@ -10,12 +12,14 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
+import httpx
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from postgrest.exceptions import APIError
 from pydantic import BaseModel, ConfigDict, Field
 from supabase import create_client
+from supabase.client import ClientOptions
 
 
 load_dotenv(Path(__file__).with_name(".env"))
@@ -30,7 +34,39 @@ bearer = HTTPBearer(auto_error=False)
 # Supabase connection and authentication
 # ---------------------------------------------------------
 
-@lru_cache
+class ResilientSupabaseHTTPClient(httpx.Client):
+    """Retry safe reads, including response-body failures, at most twice."""
+
+    def send(self, request, **kwargs):
+        # RPCs can change data even when invoked using GET. Never replay them.
+        safe_read = (request.method in {"GET", "HEAD"}
+                     and "/rpc/" not in request.url.path
+                     and not kwargs.get("stream", False))
+        attempts = 3 if safe_read else 1
+        for attempt in range(attempts):
+            try:
+                return super().send(request, **kwargs)
+            except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ReadError,
+                    httpx.ReadTimeout, httpx.RemoteProtocolError) as error:
+                if attempt == attempts - 1:
+                    raise
+                # Do not log URLs, tokens, headers, payloads or customer data.
+                logger.warning("Supabase read retry %s/2 (%s)",
+                               attempt + 1, type(error).__name__)
+                time.sleep(0.25 * (2 ** attempt))
+
+
+@lru_cache(maxsize=1)
+def supabase_http_client():
+    return ResilientSupabaseHTTPClient(
+        http2=False,
+        timeout=httpx.Timeout(20.0, connect=5.0, pool=5.0),
+        limits=httpx.Limits(max_connections=10, max_keepalive_connections=5,
+                            keepalive_expiry=5.0),
+    )
+
+
+@lru_cache(maxsize=1)
 def database():
     url = os.getenv("SUPABASE_URL")
     key = os.getenv("SUPABASE_SECRET_KEY")
@@ -41,7 +77,11 @@ def database():
             "Set SUPABASE_URL and SUPABASE_SECRET_KEY in server secrets.",
         )
 
-    return create_client(url, key)
+    return create_client(url.strip(), key.strip(), options=ClientOptions(
+        httpx_client=supabase_http_client(),
+        auto_refresh_token=False,
+        persist_session=False,
+    ))
 
 
 def staff(
@@ -70,6 +110,9 @@ def staff(
 
     try:
         user = client.auth.get_user(credentials.credentials).user
+    except httpx.TransportError as error:
+        logger.warning("Supabase authentication unavailable (%s)", type(error).__name__)
+        raise HTTPException(503, "Authentication service temporarily unavailable.") from None
     except Exception:
         raise HTTPException(
             401,
@@ -126,9 +169,19 @@ def today():
 # Application configuration
 # ---------------------------------------------------------
 
+@asynccontextmanager
+async def lifespan(app):
+    yield
+    if supabase_http_client.cache_info().currsize:
+        supabase_http_client().close()
+    database.cache_clear()
+    supabase_http_client.cache_clear()
+
+
 app = FastAPI(
     title="Business Survival API",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 origins = [
