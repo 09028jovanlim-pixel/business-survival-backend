@@ -980,6 +980,42 @@ def save_product_price(
     )
 
 
+class NewInventoryProductInput(Input):
+    sku: str = Field(min_length=1, max_length=200)
+    product_name: str = Field(min_length=1, max_length=200)
+    batch_number: str = Field(min_length=1, max_length=200)
+    quantity: int = Field(strict=True, gt=0, le=2147483647)
+    received_date: date
+    expiry_date: date
+    supplier: str = Field(min_length=1, max_length=300)
+
+
+@api.post("/inventory/products")
+def create_inventory_product(
+    body: NewInventoryProductInput,
+    user=Depends(staff)
+):
+    if body.expiry_date < body.received_date:
+        raise HTTPException(
+            422, "Expiry cannot be before receiving date."
+        )
+
+    if body.received_date > today():
+        raise HTTPException(
+            422, "Receiving date cannot be in the future."
+        )
+
+    return execute(
+        database().rpc(
+            "bs_create_inventory_product",
+            {
+                "payload": body.model_dump(mode="json"),
+                "actor": user,
+            },
+        )
+    )
+
+
 app.include_router(api)
 
 
