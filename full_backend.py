@@ -940,6 +940,21 @@ def finalize_receiving_receipt(receipt_id: UUID, action: Literal['approve', 'rej
     }))
 
 
+# ---------------------------------------------------------
+# Regular product selling prices
+# ---------------------------------------------------------
+
+@api.get("/product-prices")
+def get_product_prices():
+    rows = execute(
+        database()
+        .table("bs_product_prices")
+        .select("sku, regular_selling_price, currency, version")
+        .order("sku")
+    )
+    return {"prices": rows}
+
+
 app.include_router(api)
 
 
