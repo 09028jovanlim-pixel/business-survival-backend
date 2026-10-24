@@ -22,7 +22,7 @@ B-WARN
 | Live Demo         | https://business-survival.replit.app                                |
 | Slide Deck        | https://github.com/09028jovanlim-pixel/business-survival-backend/blob/main/submission/B-WARN.pdf |
 | How to use        | https://github.com/09028jovanlim-pixel/business-survival-backend/blob/main/submission/How_to_use-small.pdf|
-| Demo Video        | https://example.com/demo-video                                      |
+| Demo Video        | [https://www.youtube.com/watch?v=G_d7GJI0xdQ ]                             |
 
 ---
 
