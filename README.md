@@ -55,6 +55,7 @@ This solution is low cost and can be integrated for almost all category of busin
 
 ## Project Structure
 .
+```text
 project/
 ├── .replit                     Replit start command
 ├── requirements.txt            Python packages
@@ -73,7 +74,8 @@ project/
 │
 ├── tests/                      Backend tests
 ├── README.md                   Project notes
-└── .gitignore                  Files Git should ignore
+└── .gitignore                  Files Git should ignore 
+```
 ```
 
 ### Architecture
@@ -81,6 +83,7 @@ project/
 ```
 User → Frontend → Replit API → Gemini AI
                           └──→ Supabase (if the feature needs app data)
+                          
 User ← Frontend ← Replit API ← Gemini’s response
 
 ---
