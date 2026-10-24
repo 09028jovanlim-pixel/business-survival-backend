@@ -20,7 +20,8 @@ B-WARN
 | ----------------- | ----------------------------------------------                      |
 | GitHub Repository | https://github.com/09028jovanlim-pixel/business-survival-backend.git|
 | Live Demo         | https://business-survival.replit.app                                |
-| Slide Deck        | https://example.com/slides                                          |
+| Slide Deck        | https://github.com/09028jovanlim-pixel/business-survival-backend/blob/main/submission/B-WARN.pdf |
+| How to use        | https://github.com/09028jovanlim-pixel/business-survival-backend/blob/main/submission/How_to_use-small.pdf|
 | Demo Video        | https://example.com/demo-video                                      |
 
 ---
@@ -37,9 +38,9 @@ The solution proposed is to automate inventories of SME enterprise using first e
 This solution is low cost and can be integrated for almost all category of business with inventory
 ### Key Features
 
-- **Feature 1** — Short description.
-- **Feature 2** — Short description.
-- **Feature 3** — Short description.
+- **AI promotion** — Uses ai to suggest promotion detail.
+- **Financial analysis** — Use calendar to show user every day finance.
+- **Stock flow management** — Uses FEFO to detect nearest expiry.
 
 ### Tech Stack
 
@@ -135,7 +136,7 @@ How We Use Replit
 
 | Name                     | Role                | GitHub                                                      |
 | -----------              | ------------------- | ----------------------------------------------              |
-| Jovan Jean Lim Yue Hong |Backend, AI          | [@09028jovanlim-pixel(https://github.com/09028jovanlim-pixel)|
+| Jovan Jean Lim Yue Hong  |Backend, AI          | [@09028jovanlim-pixel(https://github.com/09028jovanlim-pixel)|
 | Toh Wan Ni               | Frontend , database | [@wannitoh0408-max] (https://github.com/wannitoh0408-max)   |
 
 
