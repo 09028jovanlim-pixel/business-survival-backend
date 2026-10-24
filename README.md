@@ -56,27 +56,24 @@ This solution is low cost and can be integrated for almost all category of busin
 ## Project Structure
 .
 project/
-project/
-├── .replit                       Replit start command
-├── gemini_service.py     Backend code that calls Gemini
-├── requirements.txt              Python packages
-├── .env.example                  Example names for private settings
+├── .replit                     Replit start command
+├── requirements.txt            Python packages
+├── .env.example                Example names for private settings
 │
-├── business_app.py               Main FastAPI backend selected by .replit
-├── database.py                   Supabase connection
-├── business_logic.py             Business calculations and rules
+├── gemini_service.py           Gemini AI connection 
+├── main.py                     Older inventory backend
 │
-├── InventoryExpiryPage.tsx       React-style page component
-├── frontend-api.js               Frontend helper for calling the API
-├── useFinancialDashboard.js      Dashboard data helper
+├── InventoryExpiryPage.tsx     React-style page component
+├── frontend-api.js             Frontend helper for calling the API
+├── useFinancialDashboard.js    Dashboard data helper
 │
-├── schema.sql                    Supabase table setup
-├── business_schema.sql           Business tables and database functions
-├── receiving.sql                 Receiving database setup
+├── schema.sql                  Supabase table setup
+├── business_schema.sql         Business tables and database functions
+├── receiving.sql               Receiving database setup
 │
-├── tests/                        Backend tests
-├── README.md                     Project notes
-└── other folders and ZIP files   Earlier integrations or saved versions
+├── tests/                      Backend tests
+├── README.md                   Project notes
+└── .gitignore                  Files Git should ignore
 ```
 
 ### Architecture
